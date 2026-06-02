@@ -1,2 +1,1 @@
-# No system-level apt packages are required for this project.
-# Python dependencies are installed from requirements.txt.
+
