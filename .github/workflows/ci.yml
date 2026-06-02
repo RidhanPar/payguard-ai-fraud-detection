@@ -1,0 +1,154 @@
+name: PayGuard CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-python-3.10-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-python-3.10-pip-
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Install dependencies from requirements.txt
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install pytest pytest-cov
+
+      - name: Run pytest with coverage report
+        run: |
+          pytest tests/ \
+            --cov=src \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov \
+            --cov-fail-under=70
+
+      - name: Upload coverage report as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: payguard-coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+
+  lint:
+    name: Run Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install flake8, black, and isort
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install flake8 black isort
+
+      - name: Run black check
+        run: |
+          black --check .
+
+      - name: Run isort check
+        run: |
+          isort --check .
+
+      - name: Run flake8
+        run: |
+          flake8 . --max-line-length=100
+
+  build-check:
+    name: Validate Build and App Startup
+    runs-on: ubuntu-latest
+    needs:
+      - test
+      - lint
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-python-3.10-build-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-python-3.10-build-pip-
+
+      - name: Verify requirements.txt is valid
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Check all imports resolve
+        run: |
+          python -m compileall src app tests
+          python - <<'PY'
+          import importlib
+
+          modules = [
+              "src.config",
+              "src.data_pipeline",
+              "src.train",
+              "src.predict",
+              "src.explain",
+              "src.utils",
+          ]
+
+          for module_name in modules:
+              importlib.import_module(module_name)
+              print(f"Imported {module_name} successfully")
+          PY
+
+      - name: Verify Streamlit app starts without error
+        run: |
+          python -m streamlit run app/dashboard.py \
+            --server.headless true \
+            --server.port 8501 \
+            --server.address 0.0.0.0 &
+          STREAMLIT_PID=$!
+
+          sleep 15
+
+          curl --fail http://localhost:8501/_stcore/health
+
+          kill $STREAMLIT_PID
