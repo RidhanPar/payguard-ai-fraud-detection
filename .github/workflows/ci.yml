@@ -40,11 +40,10 @@ jobs:
       - name: Install dependencies from requirements.txt
         run: |
           python -m pip install -r requirements.txt
-          python -m pip install pytest pytest-cov
 
       - name: Run pytest with coverage report
         run: |
-          pytest tests/ \
+          python -m pytest tests/ \
             --cov=src \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
@@ -80,15 +79,15 @@ jobs:
 
       - name: Run black check
         run: |
-          black --check .
+          python -m black --check .
 
       - name: Run isort check
         run: |
-          isort --check .
+          python -m isort --check .
 
       - name: Run flake8
         run: |
-          flake8 . --max-line-length=100
+          python -m flake8 . --max-line-length=100
 
   build-check:
     name: Validate Build and App Startup
@@ -141,14 +140,12 @@ jobs:
 
       - name: Verify Streamlit app starts without error
         run: |
-          python -m streamlit run app/dashboard.py \
+          python -m streamlit run streamlit_app.py \
             --server.headless true \
             --server.port 8501 \
             --server.address 0.0.0.0 &
           STREAMLIT_PID=$!
 
           sleep 15
-
           curl --fail http://localhost:8501/_stcore/health
-
           kill $STREAMLIT_PID

@@ -2,7 +2,7 @@
 line-length = 100
 target-version = ["py310"]
 include = "\\.pyi?$"
-exclude = """
+exclude = '''
 /(
     \\.git
   | \\.venv
@@ -16,7 +16,7 @@ exclude = """
   | htmlcov
   | \\.ipynb_checkpoints
 )/
-"""
+'''
 
 [tool.isort]
 profile = "black"
