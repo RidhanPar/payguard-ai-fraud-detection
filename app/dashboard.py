@@ -58,7 +58,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from imblearn.over_sampling import RandomOverSampler, SMOTE
+from imblearn.over_sampling import SMOTE, RandomOverSampler
 from sklearn.metrics import (
     accuracy_score,
     auc,
@@ -273,7 +273,9 @@ def normalise_shap_values(raw_shap_values: Any) -> np.ndarray:
     raise ValueError(f"Unsupported SHAP values shape: {values.shape}")
 
 
-def generate_synthetic_creditcard_data(n_rows: int = DEMO_ROWS, seed: int = RANDOM_STATE) -> pd.DataFrame:
+def generate_synthetic_creditcard_data(
+    n_rows: int = DEMO_ROWS, seed: int = RANDOM_STATE
+) -> pd.DataFrame:
     """Generate synthetic data with the same schema as Kaggle creditcard.csv."""
     rng = np.random.default_rng(seed)
     fraud_rate = 0.02
@@ -317,7 +319,9 @@ def validate_creditcard_schema(df: pd.DataFrame) -> None:
         raise ValueError("Class must contain only 0 and 1 values.")
 
 
-def maybe_sample_large_dataset(df: pd.DataFrame, max_rows: int = MAX_UPLOAD_TRAIN_ROWS) -> pd.DataFrame:
+def maybe_sample_large_dataset(
+    df: pd.DataFrame, max_rows: int = MAX_UPLOAD_TRAIN_ROWS
+) -> pd.DataFrame:
     """Stratified sample very large uploads for Streamlit Cloud responsiveness."""
     if len(df) <= max_rows:
         return df
@@ -334,7 +338,9 @@ def maybe_sample_large_dataset(df: pd.DataFrame, max_rows: int = MAX_UPLOAD_TRAI
     return sampled.sample(frac=1.0, random_state=RANDOM_STATE).reset_index(drop=True)
 
 
-def prepare_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, StandardScaler, pd.DataFrame]:
+def prepare_features(
+    df: pd.DataFrame,
+) -> Tuple[pd.DataFrame, pd.Series, StandardScaler, pd.DataFrame]:
     """Clean data and engineer scaled model features."""
     validate_creditcard_schema(df)
     cleaned_df = df.copy()[required_creditcard_columns()]
@@ -374,7 +380,9 @@ def get_positive_scores(model: Any, X: pd.DataFrame) -> np.ndarray:
     raise AttributeError("Model must support predict_proba or decision_function.")
 
 
-def calculate_metrics(y_true: pd.Series, probabilities: np.ndarray, threshold: float) -> Dict[str, float]:
+def calculate_metrics(
+    y_true: pd.Series, probabilities: np.ndarray, threshold: float
+) -> Dict[str, float]:
     """Calculate classification metrics at a threshold."""
     y_pred = (probabilities >= threshold).astype(int)
     return {
@@ -394,7 +402,11 @@ def build_prediction_dataframe(
 ) -> pd.DataFrame:
     """Build a prediction results DataFrame."""
     probabilities = get_positive_scores(model, X)
-    results = raw_df.reset_index(drop=True).copy() if raw_df is not None else X.reset_index(drop=True).copy()
+    results = (
+        raw_df.reset_index(drop=True).copy()
+        if raw_df is not None
+        else X.reset_index(drop=True).copy()
+    )
     results["fraud_probability"] = probabilities
     results["is_fraud"] = results["fraud_probability"] >= threshold
     results["risk_level"] = results["fraud_probability"].apply(get_risk_level)
@@ -467,7 +479,9 @@ def load_disk_artifacts_cached(model_mtime: float, scaler_mtime: float) -> Optio
 
 
 @st.cache_resource(show_spinner=False)
-def train_model_cached(source_kind: str, uploaded_bytes: Optional[bytes], demo_seed: int) -> Dict[str, Any]:
+def train_model_cached(
+    source_kind: str, uploaded_bytes: Optional[bytes], demo_seed: int
+) -> Dict[str, Any]:
     """Train the PayGuard model inside Streamlit and cache the result."""
     if source_kind == "demo":
         raw_df = generate_synthetic_creditcard_data(n_rows=DEMO_ROWS, seed=demo_seed)
@@ -563,7 +577,9 @@ def get_active_artifacts() -> Optional[Dict[str, Any]]:
     return None
 
 
-def preprocess_new_transactions(df: pd.DataFrame, scaler: StandardScaler) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def preprocess_new_transactions(
+    df: pd.DataFrame, scaler: StandardScaler
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Preprocess uploaded transactions for prediction."""
     if df.empty:
         raise ValueError("Uploaded file is empty.")
@@ -585,16 +601,22 @@ def preprocess_new_transactions(df: pd.DataFrame, scaler: StandardScaler) -> Tup
             "CSV must contain either raw Time and Amount columns or scaled Time_Scaled and Amount_Scaled columns."
         )
 
-    missing_features = [feature for feature in model_feature_columns() if feature not in input_df.columns]
+    missing_features = [
+        feature for feature in model_feature_columns() if feature not in input_df.columns
+    ]
     if missing_features:
         raise ValueError(f"Missing model features: {missing_features}")
     return input_df[model_feature_columns()], display_df
 
 
-def get_top_factors_from_importance(model: Any, X_instance: pd.DataFrame, top_n: int = 5) -> List[Dict[str, Any]]:
+def get_top_factors_from_importance(
+    model: Any, X_instance: pd.DataFrame, top_n: int = 5
+) -> List[Dict[str, Any]]:
     """Get top risk factors using model importances and feature values."""
     try:
-        importances = getattr(model, "feature_importances_", np.ones(X_instance.shape[1]) / X_instance.shape[1])
+        importances = getattr(
+            model, "feature_importances_", np.ones(X_instance.shape[1]) / X_instance.shape[1]
+        )
         values = X_instance.iloc[0].to_numpy(dtype=float)
         factors_df = pd.DataFrame(
             {
@@ -604,7 +626,11 @@ def get_top_factors_from_importance(model: Any, X_instance: pd.DataFrame, top_n:
                 "impact_score": np.abs(values) * importances,
             }
         )
-        return factors_df.sort_values("impact_score", ascending=False).head(top_n).to_dict(orient="records")
+        return (
+            factors_df.sort_values("impact_score", ascending=False)
+            .head(top_n)
+            .to_dict(orient="records")
+        )
     except Exception:
         return []
 
@@ -722,7 +748,9 @@ def run_training_progress(source_kind: str, uploaded_bytes: Optional[bytes]) -> 
 
         st.session_state["trained_artifacts"] = artifacts
         metrics = artifacts["metrics"]
-        success_banner(f"✅ Model trained successfully — AUC: {metrics['auc']:.3f} | Ready to detect fraud")
+        success_banner(
+            f"✅ Model trained successfully — AUC: {metrics['auc']:.3f} | Ready to detect fraud"
+        )
 
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -753,7 +781,9 @@ def run_training_progress(source_kind: str, uploaded_bytes: Optional[bytes]) -> 
 
 def page_overview(artifacts: Dict[str, Any]) -> None:
     """Render Overview page."""
-    show_header("AI-Powered Payment Fraud Detection", "real-time risk monitoring for transaction teams")
+    show_header(
+        "AI-Powered Payment Fraud Detection", "real-time risk monitoring for transaction teams"
+    )
     model = artifacts["model"]
     X_test = artifacts.get("X_test")
     y_test = artifacts.get("y_test")
@@ -769,12 +799,16 @@ def page_overview(artifacts: Dict[str, Any]) -> None:
             results_df["Time"], unit="s"
         )
     else:
-        results_df["transaction_time"] = pd.date_range("2026-01-01", periods=len(results_df), freq="h")
+        results_df["transaction_time"] = pd.date_range(
+            "2026-01-01", periods=len(results_df), freq="h"
+        )
 
     total_transactions = len(results_df)
     fraud_detected = int(results_df["is_fraud"].sum())
     high_risk_df = results_df[results_df["risk_level"].isin(["HIGH", "CRITICAL"])]
-    amount_protected = float(high_risk_df["Amount"].sum()) if "Amount" in high_risk_df.columns else 0.0
+    amount_protected = (
+        float(high_risk_df["Amount"].sum()) if "Amount" in high_risk_df.columns else 0.0
+    )
     accuracy_text = "N/A"
     if y_test is not None:
         accuracy = artifacts.get("metrics", {}).get(
@@ -874,7 +908,11 @@ def page_analyse_transactions(artifacts: Dict[str, Any]) -> None:
             total_analysed = len(results_df)
             high_risk_mask = results_df["risk_level"].isin(["HIGH", "CRITICAL"])
             high_risk_count = int(high_risk_mask.sum())
-            amount_at_risk = float(results_df.loc[high_risk_mask, "Amount"].sum()) if "Amount" in results_df.columns else 0.0
+            amount_at_risk = (
+                float(results_df.loc[high_risk_mask, "Amount"].sum())
+                if "Amount" in results_df.columns
+                else 0.0
+            )
 
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -958,7 +996,11 @@ def page_model_explainability(artifacts: Dict[str, Any]) -> None:
                         "shap_value": local_values,
                     }
                 )
-                shap_top_factors = shap_df.sort_values("impact_score", ascending=False).head(5).to_dict(orient="records")
+                shap_top_factors = (
+                    shap_df.sort_values("impact_score", ascending=False)
+                    .head(5)
+                    .to_dict(orient="records")
+                )
         except Exception as exc:
             logger.warning("SHAP local explanation failed: %s", exc)
             st.warning("SHAP explanation could not be generated. Showing fallback risk factors.")
@@ -1025,7 +1067,9 @@ def page_model_performance(artifacts: Dict[str, Any]) -> None:
         roc_fig = go.Figure()
         roc_fig.add_trace(go.Scatter(x=fpr, y=tpr, mode="lines", name=f"ROC AUC = {roc_auc:.4f}"))
         roc_fig.add_trace(
-            go.Scatter(x=[0, 1], y=[0, 1], mode="lines", name="Random Classifier", line=dict(dash="dash"))
+            go.Scatter(
+                x=[0, 1], y=[0, 1], mode="lines", name="Random Classifier", line=dict(dash="dash")
+            )
         )
         roc_fig.update_layout(
             title="ROC Curve",
@@ -1040,7 +1084,9 @@ def page_model_performance(artifacts: Dict[str, Any]) -> None:
         precision, recall, _ = precision_recall_curve(y_test, probabilities)
         pr_auc = auc(recall, precision)
         pr_fig = go.Figure()
-        pr_fig.add_trace(go.Scatter(x=recall, y=precision, mode="lines", name=f"PR AUC = {pr_auc:.4f}"))
+        pr_fig.add_trace(
+            go.Scatter(x=recall, y=precision, mode="lines", name=f"PR AUC = {pr_auc:.4f}")
+        )
         pr_fig.update_layout(
             title="Precision-Recall Curve",
             xaxis_title="Recall",
@@ -1081,14 +1127,12 @@ def page_model_performance(artifacts: Dict[str, Any]) -> None:
             ]
         )
         st.dataframe(metrics_df.round(4), use_container_width=True)
-        st.markdown(
-            """
+        st.markdown("""
             **How to read this:**
             - Higher **recall** catches more real fraud.
             - Higher **precision** means fewer false fraud alerts.
             - Lower thresholds usually increase recall but reduce precision.
-            """
-        )
+            """)
 
 
 def render_sidebar(artifacts: Dict[str, Any]) -> str:
@@ -1100,7 +1144,11 @@ def render_sidebar(artifacts: Dict[str, Any]) -> str:
         st.sidebar.success(f"Model ready | AUC {metrics.get('auc', 0):.3f}")
     else:
         st.sidebar.success("Model ready")
-    st.sidebar.caption("Model source: disk/session cache" if artifacts.get("saved_to_disk") else "Model source: in-memory session")
+    st.sidebar.caption(
+        "Model source: disk/session cache"
+        if artifacts.get("saved_to_disk")
+        else "Model source: in-memory session"
+    )
     if st.sidebar.button("Retrain Model", use_container_width=True):
         reset_training_state()
     st.sidebar.markdown("---")
@@ -1125,7 +1173,9 @@ def main() -> None:
 
     metrics = artifacts.get("metrics")
     if metrics:
-        success_banner(f"✅ Model trained successfully — AUC: {metrics['auc']:.3f} | Ready to detect fraud")
+        success_banner(
+            f"✅ Model trained successfully — AUC: {metrics['auc']:.3f} | Ready to detect fraud"
+        )
 
     selected_page = render_sidebar(artifacts)
     try:
