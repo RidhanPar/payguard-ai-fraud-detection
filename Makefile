@@ -1,4 +1,4 @@
-.PHONY: test lint run clean deploy
+.PHONY: test lint run clean deploy docker-build docker-run docker-compose
 
 test:
 	python -m pytest tests/ -v --cov=src --cov-report=term-missing --cov-fail-under=70
@@ -31,3 +31,12 @@ deploy:
 	@echo "8. Click Deploy"
 	@echo ""
 	@echo "Full guide: docs/DEPLOYMENT.md"
+
+docker-build:
+	docker build -t payguard .
+
+docker-run:
+	docker run -p 8501:8501 payguard
+
+docker-compose:
+	docker compose up --build

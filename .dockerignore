@@ -1,0 +1,38 @@
+# Git
+.git
+.github
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Data and generated artifacts
+data/raw/
+data/processed/
+models/
+reports/
+mlruns/
+htmlcov/
+coverage.xml
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
