@@ -16,6 +16,7 @@ It must not be used as an autonomous blocking system or for real customer decisi
 ## Validation
 
 - Test data remains separate from SMOTE-resampled training data.
+- Scaling is fitted on training data only before transforming the untouched test split.
 - Primary metrics: PR-AUC, ROC-AUC, precision, recall, F1, and fraud coverage at fixed analyst-review capacity.
 - Published scores should only be treated as evidence when reproduced from the selected data source.
 

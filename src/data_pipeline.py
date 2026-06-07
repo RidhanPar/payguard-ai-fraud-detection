@@ -293,6 +293,32 @@ class FraudDataPipeline:
             logger.exception("Failed to apply SMOTE.")
             raise RuntimeError("Failed to apply SMOTE to training data.") from exc
 
+    def scale_split_features(
+        self,
+        X_train: pd.DataFrame,
+        X_test: pd.DataFrame,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Fit scaling on training data only, then transform both splits."""
+        required_columns = {"Amount", "Time"}
+        for split_name, split in [("X_train", X_train), ("X_test", X_test)]:
+            missing_columns = required_columns.difference(split.columns)
+            if missing_columns:
+                raise ValueError(f"{split_name} is missing scaling columns: {missing_columns}")
+
+        train_scaled = X_train.copy()
+        test_scaled = X_test.copy()
+        self.scaler.fit(train_scaled[["Amount", "Time"]])
+        train_scaled[["Amount_Scaled", "Time_Scaled"]] = self.scaler.transform(
+            train_scaled[["Amount", "Time"]]
+        )
+        test_scaled[["Amount_Scaled", "Time_Scaled"]] = self.scaler.transform(
+            test_scaled[["Amount", "Time"]]
+        )
+        train_scaled = train_scaled.drop(columns=["Amount", "Time"])
+        test_scaled = test_scaled.drop(columns=["Amount", "Time"])
+        joblib.dump(self.scaler, self.model_dir / "scaler.pkl")
+        return train_scaled, test_scaled
+
     def save_processed_data(
         self,
         X_train: pd.DataFrame,
@@ -347,9 +373,8 @@ class FraudDataPipeline:
 
             raw_df = self.load_data()
             cleaned_df = self.clean_data(raw_df)
-            engineered_df = self.engineer_features(cleaned_df)
-
-            X_train, X_test, y_train, y_test = self.split_data(engineered_df)
+            X_train_raw, X_test_raw, y_train, y_test = self.split_data(cleaned_df)
+            X_train, X_test = self.scale_split_features(X_train_raw, X_test_raw)
             X_train_resampled, y_train_resampled = self.apply_smote(
                 X_train,
                 y_train,

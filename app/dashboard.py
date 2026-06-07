@@ -375,6 +375,35 @@ def prepare_features(
     return X, y, scaler, cleaned_df
 
 
+def prepare_train_test_features(
+    df: pd.DataFrame,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, StandardScaler, pd.DataFrame]:
+    """Split raw rows first and fit scaling only on the training split."""
+    validate_creditcard_schema(df)
+    cleaned_raw = df.copy()[required_creditcard_columns()]
+    cleaned_raw = cleaned_raw.drop_duplicates().dropna().reset_index(drop=True)
+    cleaned_raw["Class"] = cleaned_raw["Class"].astype(int)
+
+    train_raw, test_raw = train_test_split(
+        cleaned_raw,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+        stratify=cleaned_raw["Class"],
+    )
+    scaler = StandardScaler()
+    scaler.fit(train_raw[["Amount", "Time"]])
+
+    def transform(split: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
+        featured = split.copy()
+        featured[["Amount_Scaled", "Time_Scaled"]] = scaler.transform(featured[["Amount", "Time"]])
+        featured = featured.drop(columns=["Amount", "Time"])
+        return featured.drop(columns=["Class"]), featured["Class"]
+
+    X_train, y_train = transform(train_raw)
+    X_test, y_test = transform(test_raw)
+    return X_train, X_test, y_train, y_test, scaler, test_raw
+
+
 def apply_smote_safely(X_train: pd.DataFrame, y_train: pd.Series) -> Tuple[pd.DataFrame, pd.Series]:
     """Balance the training data using SMOTE, with RandomOverSampler fallback."""
     minority_count = int(y_train.value_counts().min())
@@ -511,15 +540,7 @@ def train_model_cached(
         source_label = "uploaded_csv"
 
     raw_df = maybe_sample_large_dataset(raw_df)
-    X, y, scaler, cleaned_raw = prepare_features(raw_df)
-    X_train, X_test, y_train, y_test, _, raw_test = train_test_split(
-        X,
-        y,
-        cleaned_raw,
-        test_size=TEST_SIZE,
-        random_state=RANDOM_STATE,
-        stratify=y,
-    )
+    X_train, X_test, y_train, y_test, scaler, raw_test = prepare_train_test_features(raw_df)
     X_train_resampled, y_train_resampled = apply_smote_safely(X_train, y_train)
 
     model = XGBClassifier(
@@ -552,7 +573,7 @@ def train_model_cached(
         "model": model,
         "scaler": scaler,
         "metrics": metrics,
-        "feature_names": X.columns.tolist(),
+        "feature_names": X_test.columns.tolist(),
         "X_test": X_test.reset_index(drop=True),
         "y_test": y_test.reset_index(drop=True),
         "test_raw": raw_test.reset_index(drop=True),
