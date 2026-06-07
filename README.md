@@ -23,6 +23,24 @@ The business problem PayGuard solves is simple: **identify high-risk transaction
 
 ---
 
+## Reviewer Guide
+
+For a quick technical review:
+
+| What to review | Evidence |
+|---|---|
+| Data cleaning, validation, and imbalance handling | [`src/data_pipeline.py`](src/data_pipeline.py) |
+| Model comparison and fraud-sensitive metrics | [`src/train.py`](src/train.py) |
+| Batch and single-transaction scoring | [`src/predict.py`](src/predict.py) |
+| Explainability implementation | [`src/explain.py`](src/explain.py) |
+| Product/dashboard experience | [`streamlit_app.py`](streamlit_app.py), [`app/dashboard.py`](app/dashboard.py) |
+| Automated quality checks | [`tests/`](tests/), [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
+| Reproducible deployment | [`Dockerfile`](Dockerfile), [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) |
+
+**Current scope:** this is a portfolio prototype trained on the public Kaggle credit-card fraud dataset. It is not a production fraud decisioning system and should not be used to make real customer decisions without validation, governance, monitoring, and human-review controls.
+
+---
+
 ## 🏗️ Architecture
 
 ```text
@@ -72,17 +90,17 @@ The business problem PayGuard solves is simple: **identify high-risk transaction
 
 ---
 
-## 📊 Key Results
+## 📊 Evaluation Status
 
-| Model | AUC-ROC | Precision | Recall | F1 |
-|---|---:|---:|---:|---:|
-| Logistic Regression | 0.970 | 0.890 | 0.850 | 0.870 |
-| Random Forest | 0.990 | 0.950 | 0.910 | 0.930 |
-| XGBoost | 0.999 | 0.970 | 0.940 | 0.955 |
+The repository intentionally does not publish unverified model scores. Run the preprocessing and training workflow to reproduce model comparison results on your local copy of the Kaggle dataset.
 
-**Business impact:** XGBoost catches **94% of fraud** while maintaining **97% precision**, helping reduce financial loss while keeping false fraud alerts under control.
+The evaluation code reports:
 
-> Note: These values are realistic project placeholders. Replace them with final metrics after running `notebooks/03_modelling.ipynb`.
+- Precision, recall, F1, ROC-AUC, and PR-AUC.
+- A Logistic Regression baseline alongside Random Forest and XGBoost.
+- Test-set evaluation kept separate from SMOTE-resampled training data.
+
+For an imbalanced fraud problem, **PR-AUC, recall, precision, and the operational cost of false positives** should drive model selection; accuracy alone is not a useful success measure.
 
 ---
 
@@ -161,8 +179,8 @@ payguard/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/payguard.git
-cd payguard
+git clone https://github.com/RidhanPar/payguard-ai-fraud-detection.git
+cd payguard-ai-fraud-detection
 ```
 
 ### 2. Create and activate a virtual environment
@@ -285,7 +303,11 @@ Because the dataset uses anonymized PCA features, these variables cannot be mapp
 
 ## 🌐 Live Demo
 
-[Link to live Streamlit app](your-link-here)
+No public demo is currently published. The dashboard runs locally with:
+
+```bash
+streamlit run streamlit_app.py
+```
 
 ---
 
@@ -295,7 +317,8 @@ Because the dataset uses anonymized PCA features, these variables cannot be mapp
 - Track experiments, metrics, and model versions using MLflow.
 - Add automated retraining when fraud patterns drift over time.
 - Connect the dashboard to a live payment API or transaction database.
-- Add Docker, CI/CD, and cloud deployment for production readiness.
+- Add a time-aware validation strategy and probability calibration.
+- Publish reproducible evaluation artifacts and decision-threshold analysis.
 
 ---
 
@@ -303,9 +326,8 @@ Because the dataset uses anonymized PCA features, these variables cannot be mapp
 
 **Ridhan Parvendhan**
 
-- LinkedIn: [your-linkedin-here](your-linkedin-here)
-- GitHub: [your-github-here](your-github-here)
-- Portfolio: [your-portfolio-here](your-portfolio-here)
+- LinkedIn: [linkedin.com/in/ridhanparvendhan](https://www.linkedin.com/in/ridhanparvendhan/)
+- GitHub: [github.com/RidhanPar](https://github.com/RidhanPar)
 
 ---
 
