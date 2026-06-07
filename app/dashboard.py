@@ -3,7 +3,7 @@ PayGuard Streamlit Dashboard with in-app model training.
 
 This version is fully self-contained for Streamlit Cloud:
 - If no trained model exists, the app shows a setup page.
-- Users can upload creditcard.csv or use instant demo mode.
+- Users can upload creditcard.csv or use instant Sample Dataset.
 - The full training pipeline runs inside Streamlit.
 - The trained model is cached in session and saved to disk when possible.
 - After training, the app opens the full 4-page fraud detection dashboard.
@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import streamlit as st
 
 st.set_page_config(
-    page_title="PayGuard | AI Fraud Detection",
+    page_title="PayGuard | Fraud Detection",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -200,8 +200,8 @@ def show_setup_header() -> None:
         <div class="setup-header">
             <div class="logo-text">Welcome to PayGuard — Let's set up your model</div>
             <div class="logo-subtitle">
-                Upload the Kaggle credit card fraud dataset or launch demo mode
-                to train an AI fraud detection model directly inside the app.
+                Upload the Kaggle credit card fraud dataset or launch Sample Dataset
+                to train a fraud detection model directly inside the app.
             </div>
         </div>
         """,
@@ -674,7 +674,7 @@ def show_setup_page() -> None:
         """
         <div class="warning-banner">
             No trained model was found. Train one now by uploading the Kaggle
-            creditcard.csv file or start instantly with Demo Mode.
+            creditcard.csv file or start instantly with Sample Dataset.
         </div>
         """,
         unsafe_allow_html=True,
@@ -696,13 +696,13 @@ def show_setup_page() -> None:
             st.success(f"Uploaded `{uploaded_file.name}` successfully.")
 
     with col_demo:
-        st.markdown("### ⚡ Demo Mode")
+        st.markdown("### ⚡ Sample Dataset")
         st.markdown("Generate a built-in synthetic dataset with 5,000 rows for instant testing.")
-        if st.button("Use Demo Mode", type="primary", use_container_width=True):
+        if st.button("Use Sample Dataset", type="primary", use_container_width=True):
             st.session_state["setup_source_kind"] = "demo"
             st.session_state["setup_uploaded_bytes"] = None
             st.session_state["setup_uploaded_name"] = "Synthetic demo dataset"
-            st.success("Demo Mode selected. Ready to train.")
+            st.success("Sample Dataset selected. Ready to train.")
 
     source_kind = st.session_state.get("setup_source_kind")
     source_name = st.session_state.get("setup_uploaded_name")
@@ -797,9 +797,7 @@ def run_training_progress(source_kind: str, uploaded_bytes: Optional[bytes]) -> 
 
 def page_overview(artifacts: Dict[str, Any]) -> None:
     """Render Overview page."""
-    show_header(
-        "AI-Powered Payment Fraud Detection", "real-time risk monitoring for transaction teams"
-    )
+    show_header("Payment Fraud Risk Monitoring", "real-time risk monitoring for transaction teams")
     model = artifacts["model"]
     X_test = artifacts.get("X_test")
     y_test = artifacts.get("y_test")
@@ -1186,7 +1184,7 @@ def page_model_performance(artifacts: Dict[str, Any]) -> None:
 def render_sidebar(artifacts: Dict[str, Any]) -> str:
     """Render sidebar and return selected page."""
     st.sidebar.markdown("## 🛡️ PayGuard")
-    st.sidebar.markdown("Self-contained fraud detection dashboard")
+    st.sidebar.markdown("Fraud risk monitoring dashboard")
     metrics = artifacts.get("metrics", {})
     if metrics:
         st.sidebar.success(f"Model ready | AUC {metrics.get('auc', 0):.3f}")

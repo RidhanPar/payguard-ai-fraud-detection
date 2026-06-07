@@ -1,4 +1,4 @@
-# PayGuard — AI-Powered Payment Fraud Detection
+# PayGuard — Machine Learning Fraud Detection Platform
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
@@ -15,11 +15,7 @@
 
 ## 🎯 Project Overview
 
-**PayGuard** is an end-to-end machine learning project that detects fraudulent payment transactions using advanced classification models, class imbalance handling, explainable AI, and a professional Streamlit dashboard. The system analyses transaction patterns, assigns fraud probabilities, categorises risk levels, and helps decision-makers understand why a transaction was flagged.
-
-Payment companies process large volumes of transactions every day, and even a small percentage of fraud can create major financial losses, customer trust issues, and operational pressure. This project mirrors real challenges faced by payment companies like **GoCardless**, where fraud prevention, payment success, risk monitoring, and scalable decision-making are business-critical.
-
-The business problem PayGuard solves is simple: **identify high-risk transactions early, reduce fraud losses, and support faster fraud investigation with explainable model decisions**. Instead of only producing a prediction, PayGuard also provides risk levels, model performance monitoring, SHAP explainability, and business impact estimates.
+PayGuard is a machine learning fraud detection platform that analyses payment transaction patterns, scores fraud risk, and explains model decisions through a Streamlit monitoring dashboard. The project includes data cleaning, class imbalance handling, model training, SHAP-based explainability, CI/CD checks, Docker support, and an interactive deployment-ready application.
 
 ---
 
@@ -342,7 +338,8 @@ PayGuard demonstrates practical skills in:
 - End-to-end data science project development
 - Fraud detection and imbalanced classification
 - Machine learning model comparison and tuning
-- Explainable AI using SHAP
+- model explainability using SHAP
 - Business-focused dashboard development
 - Production-style Python project structure
 - Testing, modular code, and reusable ML pipelines
+
