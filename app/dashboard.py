@@ -573,7 +573,7 @@ def train_model_cached(
         "model": model,
         "scaler": scaler,
         "metrics": metrics,
-        "feature_names": X.columns.tolist(),
+        "feature_names": X_test.columns.tolist(),
         "X_test": X_test.reset_index(drop=True),
         "y_test": y_test.reset_index(drop=True),
         "test_raw": raw_test.reset_index(drop=True),
