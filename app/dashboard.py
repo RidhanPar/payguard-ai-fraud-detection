@@ -1162,14 +1162,12 @@ def page_model_performance(artifacts: Dict[str, Any]) -> None:
             ]
         )
         st.dataframe(metrics_df.round(4), use_container_width=True)
-        st.markdown(
-            """
+        st.markdown("""
             **How to read this:**
             - Higher **recall** catches more real fraud.
             - Higher **precision** means fewer false fraud alerts.
             - Lower thresholds usually increase recall but reduce precision.
-            """
-        )
+            """)
 
     st.markdown("### Review Capacity Simulator")
     max_reviews = max(1, min(500, len(probabilities)))
