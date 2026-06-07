@@ -30,7 +30,7 @@ For a quick technical review:
 | Batch and single-transaction scoring | [`src/predict.py`](src/predict.py) |
 | Explainability implementation | [`src/explain.py`](src/explain.py) |
 | Product/dashboard experience | [`streamlit_app.py`](streamlit_app.py), [`app/dashboard.py`](app/dashboard.py) |
-| Automated quality checks | [`tests/`](tests/), [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
+| Automated quality checks | [`tests/`](tests/), including Streamlit runtime smoke tests, [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | Reproducible deployment | [`Dockerfile`](Dockerfile), [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) |
 
 **Current scope:** this is a portfolio prototype trained on the public Kaggle credit-card fraud dataset. It is not a production fraud decisioning system and should not be used to make real customer decisions without validation, governance, monitoring, and human-review controls.
@@ -97,6 +97,7 @@ The evaluation code reports:
 - Precision, recall, F1, ROC-AUC, and PR-AUC.
 - A Logistic Regression baseline alongside Random Forest and XGBoost.
 - Test-set evaluation kept separate from SMOTE-resampled training data.
+- Preprocessing fitted on training data only to prevent test-distribution leakage.
 
 For an imbalanced fraud problem, **PR-AUC, recall, precision, and the operational cost of false positives** should drive model selection; accuracy alone is not a useful success measure.
 

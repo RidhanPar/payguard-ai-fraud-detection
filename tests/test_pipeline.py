@@ -117,6 +117,20 @@ def test_feature_scaling_range(pipeline_config: Dict[str, object]) -> None:
     assert np.isclose(engineered_df["Time_Scaled"].std(ddof=0), 1.0, atol=1e-8)
 
 
+def test_split_scaling_is_fit_on_training_data_only(pipeline_config: Dict[str, object]) -> None:
+    """Test rows must not influence the fitted preprocessing scaler."""
+    pipeline = FraudDataPipeline(config=pipeline_config)
+    X_train = pd.DataFrame({"Amount": [10.0, 20.0, 30.0], "Time": [1.0, 2.0, 3.0]})
+    X_test = pd.DataFrame({"Amount": [10_000.0], "Time": [10_000.0]})
+
+    train_scaled, test_scaled = pipeline.scale_split_features(X_train, X_test)
+
+    assert np.isclose(train_scaled["Amount_Scaled"].mean(), 0.0)
+    assert np.isclose(train_scaled["Time_Scaled"].mean(), 0.0)
+    assert test_scaled["Amount_Scaled"].iloc[0] > 100
+    assert test_scaled["Time_Scaled"].iloc[0] > 100
+
+
 # ---------------------------------------------------------------------------
 # 2. TEST MODEL
 # ---------------------------------------------------------------------------
