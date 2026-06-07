@@ -39,6 +39,8 @@ For a quick technical review:
 
 **Current scope:** this is a portfolio prototype trained on the public Kaggle credit-card fraud dataset. It is not a production fraud decisioning system and should not be used to make real customer decisions without validation, governance, monitoring, and human-review controls.
 
+Read the intended use, validation approach, and risks in the [`model card`](docs/MODEL_CARD.md).
+
 ---
 
 ## 🏗️ Architecture
@@ -303,7 +305,9 @@ Because the dataset uses anonymized PCA features, these variables cannot be mapp
 
 ## 🌐 Live Demo
 
-No public demo is currently published. The dashboard runs locally with:
+**[Open the live PayGuard dashboard](https://payguard-ai-fraud-detection.streamlit.app/)**
+
+The dashboard also runs locally with:
 
 ```bash
 streamlit run streamlit_app.py

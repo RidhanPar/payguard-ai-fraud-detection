@@ -105,6 +105,8 @@ TEST_SIZE = 0.20
 DEFAULT_THRESHOLD = 0.50
 MAX_UPLOAD_TRAIN_ROWS = 25_000
 DEMO_ROWS = 5_000
+GITHUB_REPO_URL = "https://github.com/RidhanPar/payguard-ai-fraud-detection"
+LIVE_DEMO_URL = "https://payguard-ai-fraud-detection.streamlit.app/"
 
 CUSTOM_CSS = """
 <style>
@@ -121,6 +123,11 @@ CUSTOM_CSS = """
     }
     .logo-text { font-size: 2.45rem; font-weight: 850; letter-spacing: -0.05em; }
     .logo-subtitle { color: #eef2ff; font-size: 1.02rem; margin-top: 0.25rem; }
+    .trust-panel {
+        padding: 0.8rem 1rem; margin: -0.8rem 0 1.3rem; border-radius: 14px;
+        background: #f8fafc; border: 1px solid #e2e8f0; color: #475467;
+        font-size: 0.84rem; font-weight: 650;
+    }
     .metric-card {
         background: #ffffff; padding: 1.25rem; border-radius: 18px; border: 1px solid #edf0f5;
         box-shadow: 0 6px 22px rgba(16, 24, 40, 0.075); min-height: 120px;
@@ -171,6 +178,15 @@ def show_header(title: str, subtitle: str) -> None:
         <div class="main-header">
             <div class="logo-text">🛡️ PayGuard</div>
             <div class="logo-subtitle">{title} — {subtitle}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        """
+        <div class="trust-panel">
+            Explainable risk scoring · Imbalanced-class evaluation ·
+            Human review before action · Portfolio prototype
         </div>
         """,
         unsafe_allow_html=True,
@@ -1134,6 +1150,38 @@ def page_model_performance(artifacts: Dict[str, Any]) -> None:
             - Lower thresholds usually increase recall but reduce precision.
             """)
 
+    st.markdown("### Review Capacity Simulator")
+    max_reviews = max(1, min(500, len(probabilities)))
+    review_capacity = st.slider(
+        "How many transactions can analysts review?",
+        min_value=1,
+        max_value=max_reviews,
+        value=min(100, max_reviews),
+        help=(
+            "Ranks transactions by fraud probability and estimates coverage "
+            "at a fixed review capacity."
+        ),
+    )
+    ranked_positions = np.argsort(probabilities)[::-1][:review_capacity]
+    reviewed_labels = y_test.iloc[ranked_positions].to_numpy()
+    total_fraud = max(1, int(y_test.sum()))
+    caught_in_queue = int(reviewed_labels.sum())
+    queue_cols = st.columns(3)
+    with queue_cols[0]:
+        metric_card("Review Queue", f"{review_capacity:,}", "Highest predicted risk first")
+    with queue_cols[1]:
+        metric_card(
+            "Fraud Cases Caught",
+            f"{caught_in_queue:,}",
+            f"{caught_in_queue / total_fraud:.1%} of test-set fraud",
+        )
+    with queue_cols[2]:
+        metric_card(
+            "Queue Precision",
+            f"{caught_in_queue / review_capacity:.1%}",
+            "Expected useful analyst reviews",
+        )
+
 
 def render_sidebar(artifacts: Dict[str, Any]) -> str:
     """Render sidebar and return selected page."""
@@ -1149,6 +1197,7 @@ def render_sidebar(artifacts: Dict[str, Any]) -> str:
         if artifacts.get("saved_to_disk")
         else "Model source: in-memory session"
     )
+    st.sidebar.markdown(f"[Open live demo]({LIVE_DEMO_URL}) · [GitHub]({GITHUB_REPO_URL})")
     if st.sidebar.button("Retrain Model", use_container_width=True):
         reset_training_state()
     st.sidebar.markdown("---")
