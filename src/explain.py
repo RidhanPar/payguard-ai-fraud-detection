@@ -17,6 +17,8 @@ import numpy as np
 import pandas as pd
 import shap
 
+plt.switch_backend("Agg")
+
 PlotType = Literal["bar", "dot", "violin"]
 
 
