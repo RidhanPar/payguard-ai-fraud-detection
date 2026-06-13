@@ -1,7 +1,7 @@
 """
 Data preprocessing pipeline for PayGuard fraud detection.
 
-This module provides a production-ready data pipeline for loading, cleaning,
+This module provides a reproducible data pipeline for loading, cleaning,
 feature engineering, splitting, handling class imbalance, and saving processed
 datasets for the PayGuard AI-powered payment fraud detection project.
 """
